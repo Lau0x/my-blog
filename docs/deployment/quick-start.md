@@ -1,59 +1,63 @@
 # 5 分钟快速上手（跨机 NPM）
 
-这是最主流的部署路径：NPM 跑在 A 服务器，博客跑在 B 服务器。如果你的 NPM 和博客在同一台，请看 [same-host.md](./same-host.md)。
+最主流的部署路径：NPM 跑在 A 服务器，博客跑在 B 服务器。如果你的 NPM 和博客在同一台，请看 [same-host.md](./same-host.md)。
 
-## 前置条件
+## 两条路径二选一
+
+根据你要不要改代码，先选路径：
+
+| 路径 | 适合谁 | 镜像来源 | 需要 fork | 需要 CI |
+|------|-------|---------|----------|---------|
+| **A · 零构建（默认推荐）** | 拿现成博客跑自己域名，不改代码 | 拉上游 `ghcr.io/lau0x/my-blog` 公开镜像 | ❌ | ❌ |
+| **B · 定制化** | 要改代码、UI、schema 等 | 你 fork 仓库后自己的 GHCR 镜像 | ✅ | ✅ |
+
+> ⚠️ 路径 A 长期依赖上游作者维护镜像——如果作者改名/删包/push 破坏性改动到 `:latest`，你会受影响。如果用于严肃生产，推荐切到路径 B 自主维护。
+
+---
+
+## 路径 A：零构建部署（4 步 · 推荐）
+
+### 前置条件
 
 - 两台服务器（A: NPM，B: 博客），都装好 Docker + Docker Compose v2.x
 - 域名 A 记录已解析到 **NPM 服务器**（不是博客服务器）
-- NPM 已运行，81 端口管理面板可访问
-- fork 本仓库到你的 GitHub 并开启 GitHub Actions
+- NPM 已运行，81 管理面板可访问
 
-## Step 1. 触发 CI 构建镜像
+### Step 1. 博客服务器配防火墙
 
-任意 push 到 `main` 分支触发 `.github/workflows/docker-publish.yml`，约 3-5 分钟后，GHCR 上会出现两个包：
+跨机模式下，3000/1337 端口会发布到 0.0.0.0——**必须限制只允许 NPM 服务器 IP 访问**，否则 Strapi admin 暴露在公网。
 
-```
-ghcr.io/<your-username>/my-blog-strapi:latest
-ghcr.io/<your-username>/my-blog-nuxt:latest
-```
+Hetzner Cloud Firewall 示例：
 
-首次构建完成后，去 GitHub → Your profile → Packages，把两个包可见性改为 **Public**（否则服务器 pull 要 docker login）。
+| 方向 | 协议 | 端口 | 源 |
+|------|------|------|-----|
+| Inbound | TCP | 22 | Any |
+| Inbound | ICMP | — | Any |
+| Inbound | TCP | 3000 | `<NPM服务器IP>/32` |
+| Inbound | TCP | 1337 | `<NPM服务器IP>/32` |
 
-## Step 2. 博客服务器配防火墙
+配完**用外部扫描器验证**：`https://www.yougetsignal.com/tools/open-ports/` 输入博客 IP，确认 3000/1337 对外 closed、22 open。
 
-跨机模式下，3000/1337 端口会发布到 0.0.0.0——**必须限制只允许 NPM 服务器 IP 访问**，否则 Strapi admin 暴露在公网会被扫。
+> ⚠️ 如果博客服务器接了 Tailscale / WireGuard 等 overlay VPN，不要从同 tailnet 的机器测公网 IP 端口——会走 overlay 绕开防火墙导致假阳性。详见 [troubleshooting.md](./troubleshooting.md#tailscale-遮蔽防火墙测试)。
 
-以 Hetzner Cloud Firewall 为例（其他云类似）：
-
-| 方向 | 协议 | 端口 | 源 | 备注 |
-|------|------|------|-----|------|
-| Inbound | TCP | 22 | Any IPv4/v6 | SSH |
-| Inbound | ICMP | — | Any | ping |
-| Inbound | TCP | 3000 | `<NPM服务器IP>/32` | Nuxt |
-| Inbound | TCP | 1337 | `<NPM服务器IP>/32` | Strapi |
-
-配完后**用外部扫描器验证**（例如 `https://www.yougetsignal.com/tools/open-ports/`），确认 3000/1337 对你自己的 Mac 是 closed，只对 NPM 服务器 open。
-
-> ⚠️ 如果博客服务器接了 Tailscale / WireGuard 等 overlay VPN，**不要**从同一 tailnet 的机器测公网 IP 端口——会走 overlay 绕开云防火墙导致假阳性。详见 [troubleshooting.md](./troubleshooting.md#tailscale-遮蔽防火墙测试)。
-
-## Step 3. 博客服务器克隆 + 初始化
+### Step 2. 博客服务器克隆 + 初始化
 
 ```bash
-git clone https://github.com/<YOUR_USER>/my-blog.git
+git clone https://github.com/Lau0x/my-blog.git
 cd my-blog
-./scripts/init.sh        # 生成 .env + 7 个密钥 + chmod 600
-vim .env                 # 只改两个字段
+./scripts/init.sh        # 自动生成 .env + 7 个密钥 + chmod 600
+vim .env                 # 只改 1 个字段：DOMAIN
 ```
 
-`.env` 必填两项：
+`.env` 里唯一**必填**的字段：
 
 ```bash
-DOMAIN=blog.yourdomain.com
-IMAGE_REGISTRY=ghcr.io/<your-username>/my-blog   # 全小写！
+DOMAIN=blog.yourdomain.com          # 你的博客域名
 ```
 
-## Step 4. 启动
+`IMAGE_REGISTRY` 默认已经是 `ghcr.io/lau0x/my-blog`（上游公开镜像），不用改。
+
+### Step 3. 启动
 
 ```bash
 docker compose up -d
@@ -62,37 +66,72 @@ docker compose logs -f strapi
 
 等到日志出现 `Strapi started successfully` 就是起来了。
 
-## Step 5. NPM 服务器配反代
+### Step 4. NPM 配反代
 
 详见 [npm-setup.md](./npm-setup.md)——**务必加全 8 条 Custom Location**，少配任何一条都会导致 admin 首页 widget 报 "Something went wrong"。
 
-## Step 6. 验证闭环
+### Step 5. 注册 admin + 发文
 
-浏览器打开：
+浏览器打开 `https://blog.yourdomain.com/admin` 注册首个管理员（**立即注册**，首次启动会公开暴露注册表单）。
 
-- `https://blog.yourdomain.com` → 博客前台应返回 200
-- `https://blog.yourdomain.com/admin` → Strapi 后台注册首个管理员
+然后 **Content Manager → Article → Create new entry** 写第一篇文章，刷新前台 `https://blog.yourdomain.com` 应看到文章 = 全链路闭环。
 
-**立刻注册**——首次启动 Strapi 会对外暴露公开注册表单，不注册就有被抢注风险。
+---
 
-## Step 7. 发布第一篇文章
+## 路径 B：定制化部署（fork + 自构建）
 
-1. admin 后台 → **Content Manager → Article** → **Create new entry**
-2. 填 title / slug / content → **Save** → **Publish**
-3. 刷新前台 `https://blog.yourdomain.com`，看到文章 = 全链路闭环
+适用于你要改前端 UI、后端逻辑、Strapi schema 等场景。
 
-## Step 8.（强烈推荐）当天内轮换密钥
+### Step 1. fork 仓库
 
-如果部署过程中 secrets 在任何非加密通道（聊天记录、截图、邮件）出现过，轮换一遍：
+GitHub 上 fork `Lau0x/my-blog` 到你自己账号下，clone 到本地做修改。
+
+### Step 2. 推改动 + 触发 CI
 
 ```bash
-cd /path/to/my-blog
-cp .env .env.bak-$(date +%Y%m%d-%H%M%S)
-# 手动替换 6 个 Strapi 密钥（APP_KEYS / ADMIN_JWT_SECRET / JWT_SECRET /
-# API_TOKEN_SALT / TRANSFER_TOKEN_SALT / ENCRYPTION_KEY）为新的 openssl rand -base64 32
-docker compose restart strapi nuxt
+git add . && git commit -m "feat: 你的改动"
+git push origin main
 ```
 
-⚠️ 轮换 `APP_KEYS` 会使所有已登录的 admin session 失效，需要重新登录——**先注册 admin → 再轮换 → 再登录**，顺序别乱。
+`.github/workflows/docker-publish.yml` 会自动构建，约 3-5 分钟后 GHCR 上会出现：
 
-`DB_PASSWORD` 如果要轮换，需要同步改 postgres 内的用户密码（`ALTER USER blog WITH PASSWORD '...';`）——风险高，建议保留原值（DB_PASSWORD 只在 docker 内网使用）。
+```
+ghcr.io/<your-username>/my-blog-strapi:latest
+ghcr.io/<your-username>/my-blog-nuxt:latest
+```
+
+### Step 3. 改 GHCR 包可见性为 Public
+
+GitHub → Your profile → Packages → 找到 `my-blog-strapi` 和 `my-blog-nuxt` → Package settings → Change visibility → **Public**。
+
+（如果不改为 Public，服务器 `docker pull` 需要 `docker login ghcr.io` 带 PAT，多一步麻烦。）
+
+### Step 4. 服务器按路径 A 的 Step 1-5 部署
+
+唯一区别：`.env` 里把 `IMAGE_REGISTRY` 改成你自己的路径：
+
+```bash
+IMAGE_REGISTRY=ghcr.io/<your-username>/my-blog    # 全小写！
+```
+
+其他步骤与路径 A 完全一致。
+
+---
+
+## 后续升级
+
+无论路径 A 还是 B，日常升级都是：
+
+```bash
+./scripts/upgrade.sh
+```
+
+详见 [upgrade.md](./upgrade.md)。
+
+---
+
+## 强烈建议（当天做完）
+
+- **立刻注册 admin**（避免公开注册表单被他人抢注）
+- **轮换密钥**如果部署过程中 secrets 在截图/聊天记录出现过（参考 [upgrade.md](./upgrade.md) 的 secret rotation 章节）
+- **关闭 public registration**（Strapi Settings → Users & Permissions）

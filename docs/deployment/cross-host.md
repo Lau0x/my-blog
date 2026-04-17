@@ -26,12 +26,17 @@
 
 ```bash
 # 博客服务器 B
-git clone https://github.com/<USER>/my-blog.git
+git clone https://github.com/Lau0x/my-blog.git
 cd my-blog
 ./scripts/init.sh
-vim .env                     # 填 DOMAIN + IMAGE_REGISTRY
+vim .env                     # 默认用上游镜像，只需填 DOMAIN
 docker compose up -d         # 默认就是跨机模式，无需 -f
 ```
+
+`.env` 必填字段：
+
+- `DOMAIN=blog.yourdomain.com`（必改）
+- `IMAGE_REGISTRY=ghcr.io/lau0x/my-blog`（默认值，零改代码用户不用动；定制化场景见 [quick-start.md 路径 B](./quick-start.md#路径-b定制化部署fork--自构建)）
 
 ## 防火墙样例
 

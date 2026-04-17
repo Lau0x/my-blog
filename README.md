@@ -50,35 +50,29 @@ Nuxt 3 + Strapi 5 + PostgreSQL 前后端分离博客，Docker 编排，Nginx Pro
 - 服务器装好 Docker + Docker Compose
 - Nginx Proxy Manager 已运行
 - 域名 A 记录解析到服务器
-- fork 本仓库到你的 GitHub（开启 GitHub Actions）
 
-### 1. 触发 CI 构建镜像
-
-push 任何 commit 到 `main` 分支，`.github/workflows/docker-publish.yml` 会自动构建 + 推送到 `ghcr.io/你的用户名/仓库名-nuxt` 和 `ghcr.io/你的用户名/仓库名-strapi`。
-
-首次构建完成后，去 GitHub → Your profile → Packages，把两个包的可见性改为 **Public**（否则服务器 pull 需要登录 token）。
-
-### 2. 服务器上克隆 + 一键初始化
+### 1. 服务器克隆 + 一键初始化（路径 A · 零构建）
 
 ```bash
-git clone https://github.com/YOUR_USER/my-blog.git
+git clone https://github.com/Lau0x/my-blog.git
 cd my-blog
 ./scripts/init.sh             # 自动生成 .env + 7 个密钥 + chmod 600
-vim .env                      # 只需改 2 个字段（见下）
+vim .env                      # 只需改 1 个字段
 ```
 
-`.env` 里**必填**的两个占位符：
+`.env` 里**必填**：
 
 ```bash
-DOMAIN=blog.yourdomain.com                 # 你的域名
-IMAGE_REGISTRY=ghcr.io/your_user/my-blog   # 全小写！
+DOMAIN=blog.yourdomain.com    # 你的域名
 ```
 
-其余字段（数据库密码、6 个 Strapi 密钥）由 `init.sh` 已经填好，不用动。
+`IMAGE_REGISTRY` 默认是 `ghcr.io/lau0x/my-blog`（上游公开镜像），**零改代码的用户不用改**。
+
+想改代码/定制化？见下方的 **路径 B · 自构建镜像** 章节，或 [docs/deployment/quick-start.md](./docs/deployment/quick-start.md#路径-b定制化部署fork--自构建)。
 
 > 💡 **同机 NPM 部署**（NPM 和博客在同一台）还需要改一个字段：把 `NPM_NETWORK` 填成 `docker network ls | grep npm` 输出的值。
 
-### 3. 启动
+### 2. 启动
 
 ```bash
 # 默认：跨机 NPM 部署
@@ -89,26 +83,20 @@ docker compose logs -f strapi
 docker compose -f docker-compose.yml -f docker-compose.same-host.yml up -d
 ```
 
-等到 Strapi 输出 `Welcome back!` 就是起来了。
+等到 Strapi 输出 `Strapi started successfully` 就是起来了。
 
 > ⚠️ **跨机部署必须配防火墙**：3000/1337 端口已发布到 0.0.0.0，如果不限制，Strapi admin 会暴露在公网。用云厂商 firewall 或 ufw 只放行 NPM 服务器 IP。
 
-### 4. 初始化内容
+### 3. 注册 admin + 录内容
 
-1. 打开 `https://yourdomain.com/admin` → 注册第一个管理员
-2. **Content-Type Builder** → 建 **Article**：
-   | 字段 | 类型 |
-   |---|---|
-   | title | Text (Short) |
-   | slug | UID (关联 title) |
-   | excerpt | Text (Long) |
-   | content | Rich text (Markdown) |
-   | cover | Media (Single) |
-   | publishedDate | Date |
-3. **Settings → Users & Permissions → Roles → Public** → 勾选 Article 的 `find` + `findOne`
-4. **重要**：schema 改了后需要重新 push 镜像 → CI 构建 → 服务器 `docker compose pull && docker compose up -d`
+1. 打开 `https://yourdomain.com/admin` → **立即**注册第一个管理员（首次启动会暴露公开注册表单）
+2. 左栏 **Content Manager → Article** → **Create new entry** → 写第一篇 → **Publish**
+3. **Settings → Users & Permissions → Roles → Public** → 勾选 Article 的 `find` + `findOne`（让前台能读取）
+4. 刷新前台 `https://yourdomain.com` 看到文章 = 全链路闭环
 
-### 5. NPM 反代（单域名 Custom Locations）
+> 💡 Content-Type 结构已经在镜像里烘焙好（Article、User、广告配置 三个 schema），不用手动建。如需新增字段，见下方 **路径 B** 章节。
+
+### 4. NPM 反代（单域名 Custom Locations）
 
 **Proxy Host 主条目**：
 - Domain: `yourdomain.com`
@@ -138,6 +126,37 @@ client_max_body_size 50M;
 ```
 
 **SSL**：Let's Encrypt → Force SSL + HTTP/2。
+
+---
+
+## 路径 B · 自构建镜像（可选，给定制化用户）
+
+路径 A 默认使用上游作者 `@Lau0x` 维护的公开镜像 `ghcr.io/lau0x/my-blog`，90% 用户不需要改代码，**零构建直接跑**。
+
+以下场景需要切到路径 B：
+
+- 要改前端 UI、样式、组件
+- 要改后端 Strapi 业务逻辑
+- 要加/改 Strapi Content-Type（schema 改动必须走这条路径）
+- 长期严肃生产，不想被上游镜像变动影响
+
+### 切换到路径 B
+
+1. **fork** 本仓库 `Lau0x/my-blog` 到自己 GitHub 账号下
+2. 改代码 → `git commit` → `git push origin main`
+3. GitHub Actions 自动构建，约 3-5 分钟后 GHCR 出现：
+   ```
+   ghcr.io/<你的用户名>/my-blog-strapi:latest
+   ghcr.io/<你的用户名>/my-blog-nuxt:latest
+   ```
+4. 首次构建后，去 **GitHub → Your profile → Packages** 把两个包可见性改为 **Public**（否则服务器 pull 要 docker login）
+5. 服务器 `.env` 里把 `IMAGE_REGISTRY` 改成你自己的路径：
+   ```bash
+   IMAGE_REGISTRY=ghcr.io/<你的用户名>/my-blog
+   ```
+6. `./scripts/upgrade.sh` 同步到新镜像
+
+> Schema 改动提醒：Strapi 5 production 模式下 Content-Type Builder 是禁用的。改 schema 必须在**本地 dev 模式**（`cd backend && npm run develop`）里改，commit 到仓库，触发 CI 构建新镜像，服务器拉新镜像生效。
 
 ---
 
