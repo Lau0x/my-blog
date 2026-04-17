@@ -1,0 +1,16 @@
+# 源码构建 override
+# 用法：docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+#
+# 适用场景：
+#   - 本地开发，改了代码想立刻看到效果
+#   - 首次启动还没推过镜像到 GHCR
+#   - fork 仓库定制化改造
+
+services:
+  strapi:
+    build: ./backend
+    image: my-blog-strapi:dev
+
+  nuxt:
+    build: ./frontend
+    image: my-blog-nuxt:dev

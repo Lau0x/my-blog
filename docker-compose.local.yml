@@ -1,0 +1,38 @@
+# 本地测试专用 override —— 不依赖 NPM，直接暴露端口，强制源码构建
+#
+# 用法：
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml -f docker-compose.local.yml up -d --build
+#
+# 访问：
+#   前台  http://localhost:3001
+#   后台  http://localhost:1337/admin
+#   API   http://localhost:1337/api
+#
+# 注：前台用 3001 避开 open-webui 占用的 3000
+#
+# 原理：把 npm-net 从 external 网络改写成本地 bridge，绕过 NPM 依赖
+
+services:
+  strapi:
+    ports:
+      - "1337:1337"
+    environment:
+      NODE_ENV: development
+      PUBLIC_URL: http://localhost:1337
+    command: ["npm", "run", "develop"]
+    volumes:
+      - ./backend/src:/app/src
+      - ./data/uploads:/app/public/uploads
+
+  nuxt:
+    ports:
+      - "3001:3000"
+    environment:
+      NUXT_API_INTERNAL: http://strapi:1337
+      NUXT_PUBLIC_API_BASE: http://localhost:1337/api
+      NUXT_PUBLIC_SITE_URL: http://localhost:3001
+
+networks:
+  npm-net:
+    external: false
+    name: blog-local-fake-npm

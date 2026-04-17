@@ -1,0 +1,39 @@
+{
+  "collectionName": "components_ads_ad_slots",
+  "info": {
+    "displayName": "广告位",
+    "icon": "bell",
+    "description": "单个广告位配置（banner 横幅 / affiliate 卡片）"
+  },
+  "options": {},
+  "attributes": {
+    "enabled": {
+      "type": "boolean",
+      "default": true
+    },
+    "type": {
+      "type": "enumeration",
+      "enum": ["banner", "affiliate"],
+      "default": "banner",
+      "required": true
+    },
+    "image": {
+      "type": "media",
+      "multiple": false,
+      "required": false,
+      "allowedTypes": ["images"]
+    },
+    "title": {
+      "type": "string"
+    },
+    "description": {
+      "type": "text"
+    },
+    "cta": {
+      "type": "string"
+    },
+    "link": {
+      "type": "string"
+    }
+  }
+}

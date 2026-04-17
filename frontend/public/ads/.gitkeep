@@ -1,0 +1,3 @@
+# 广告位图片放这里
+# 例如：top-banner.jpg, vps.jpg, article-top.jpg
+# 前端通过 /ads/xxx.jpg 引用

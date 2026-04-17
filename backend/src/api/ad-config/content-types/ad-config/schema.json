@@ -1,0 +1,48 @@
+{
+  "kind": "singleType",
+  "collectionName": "ad_configs",
+  "info": {
+    "singularName": "ad-config",
+    "pluralName": "ad-configs",
+    "displayName": "广告配置",
+    "description": "全局广告配置：AdSense + 4 个广告位（首页顶/首页底/文章顶/文章底）"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "adsenseClient": {
+      "type": "string",
+      "description": "Google AdSense Publisher ID，例如 ca-pub-1234567890"
+    },
+    "adsenseHomeSlot": {
+      "type": "string",
+      "description": "首页列表中 AdSense 广告位 slot ID"
+    },
+    "adsenseArticleSlot": {
+      "type": "string",
+      "description": "文章页 AdSense 广告位 slot ID（可留空）"
+    },
+    "homeTopBanner": {
+      "type": "component",
+      "repeatable": false,
+      "component": "ads.ad-slot"
+    },
+    "homeBottomCard": {
+      "type": "component",
+      "repeatable": false,
+      "component": "ads.ad-slot"
+    },
+    "articleTopBanner": {
+      "type": "component",
+      "repeatable": false,
+      "component": "ads.ad-slot"
+    },
+    "articleBottomCard": {
+      "type": "component",
+      "repeatable": false,
+      "component": "ads.ad-slot"
+    }
+  }
+}

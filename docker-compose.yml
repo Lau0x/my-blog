@@ -1,0 +1,83 @@
+# 生产部署 compose（默认从 GHCR 拉预构建镜像）
+#
+# 一键启动：
+#   docker compose up -d
+#
+# 源码构建（修改了代码或首次开发）：
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+#
+# 本地测试（不依赖 NPM，暴露端口）：
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml -f docker-compose.local.yml up -d --build
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: blog-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    networks:
+      - blog-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d ${DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  strapi:
+    image: ${IMAGE_REGISTRY:-ghcr.io/royleo/my-blog}-strapi:${IMAGE_TAG:-latest}
+    container_name: blog-strapi
+    restart: unless-stopped
+    environment:
+      DATABASE_CLIENT: postgres
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_NAME: ${DB_NAME}
+      DATABASE_USERNAME: ${DB_USER}
+      DATABASE_PASSWORD: ${DB_PASSWORD}
+      DATABASE_SSL: "false"
+      APP_KEYS: ${APP_KEYS}
+      ADMIN_JWT_SECRET: ${ADMIN_JWT_SECRET}
+      JWT_SECRET: ${JWT_SECRET}
+      API_TOKEN_SALT: ${API_TOKEN_SALT}
+      TRANSFER_TOKEN_SALT: ${TRANSFER_TOKEN_SALT}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      NODE_ENV: production
+      PUBLIC_URL: https://${DOMAIN}
+    volumes:
+      - ./data/uploads:/app/public/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - blog-net
+      - npm-net
+
+  nuxt:
+    image: ${IMAGE_REGISTRY:-ghcr.io/royleo/my-blog}-nuxt:${IMAGE_TAG:-latest}
+    container_name: blog-nuxt
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      NITRO_HOST: 0.0.0.0
+      NITRO_PORT: "3000"
+      NUXT_API_INTERNAL: http://strapi:1337
+      NUXT_PUBLIC_API_BASE: /api
+      NUXT_PUBLIC_SITE_URL: https://${DOMAIN}
+      NUXT_PUBLIC_ADSENSE_CLIENT: ${ADSENSE_CLIENT}
+    depends_on:
+      - strapi
+    networks:
+      - blog-net
+      - npm-net
+
+networks:
+  blog-net:
+    driver: bridge
+  npm-net:
+    external: true
+    name: ${NPM_NETWORK}

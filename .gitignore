@@ -1,0 +1,41 @@
+# env
+.env
+.env.*
+!.env.example
+
+# data (db + uploads — 绝对不能提交)
+data/
+
+# node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# nuxt
+frontend/.nuxt/
+frontend/.output/
+frontend/.nitro/
+frontend/.cache/
+frontend/dist/
+
+# strapi
+backend/.cache/
+backend/.tmp/
+backend/build/
+backend/dist/
+backend/exports/
+backend/.strapi/
+backend/public/uploads/*
+!backend/public/uploads/.gitkeep
+
+# backups
+backups/
+
+# os
+.DS_Store
+Thumbs.db
+
+# editor
+.vscode/
+.idea/
+*.swp
