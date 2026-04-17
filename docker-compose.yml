@@ -29,7 +29,7 @@ services:
       retries: 5
 
   strapi:
-    image: ${IMAGE_REGISTRY:-ghcr.io/royleo/my-blog}-strapi:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-ghcr.io/lau0x/my-blog}-strapi:${IMAGE_TAG:-latest}
     container_name: blog-strapi
     restart: unless-stopped
     environment:
@@ -58,7 +58,7 @@ services:
       - npm-net
 
   nuxt:
-    image: ${IMAGE_REGISTRY:-ghcr.io/royleo/my-blog}-nuxt:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-ghcr.io/lau0x/my-blog}-nuxt:${IMAGE_TAG:-latest}
     container_name: blog-nuxt
     restart: unless-stopped
     environment:
