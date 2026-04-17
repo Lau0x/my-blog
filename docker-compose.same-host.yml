@@ -1,0 +1,38 @@
+# 同机 NPM 部署 override
+#
+# 场景：Nginx Proxy Manager 和博客运行在**同一台**服务器上。
+#
+# 用法：
+#   docker compose -f docker-compose.yml -f docker-compose.same-host.yml up -d
+#
+# 原理：
+#   - 让 strapi / nuxt 额外加入 NPM 的 docker network（通过 NPM_NETWORK 环境变量指定）
+#   - 端口 3000/1337 仍发布到主机（同机场景下由本机防火墙管控，NPM 可走 docker 内网）
+#
+# 前置：
+#   - 在 .env 里设置 NPM_NETWORK=<实际的 NPM docker network 名>
+#     查法：docker network ls | grep npm
+#     常见值：nginx-proxy-manager_default / npm_default
+#   - NPM 在 Proxy Host 里 Forward Hostname 填 `blog-nuxt`（容器名），端口 3000
+#
+# 如需同机模式**不**发布 3000/1337 到主机（纯内网），需要 Docker Compose v2.24+ 并在此处加：
+#   strapi:
+#     ports: !reset []
+#   nuxt:
+#     ports: !reset []
+
+services:
+  strapi:
+    networks:
+      - blog-net
+      - npm-net
+
+  nuxt:
+    networks:
+      - blog-net
+      - npm-net
+
+networks:
+  npm-net:
+    external: true
+    name: ${NPM_NETWORK}

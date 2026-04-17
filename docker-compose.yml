@@ -1,12 +1,20 @@
 # 生产部署 compose（默认从 GHCR 拉预构建镜像）
 #
+# 默认场景：NPM 与本服务**不在同一台机器**（跨机部署）。端口发布到 0.0.0.0，
+# 必须配合云防火墙/ufw 限制 3000/1337 只对 NPM 服务器 IP 开放。
+#
 # 一键启动：
+#   ./scripts/init.sh      # 首次：生成 .env
+#   vim .env               # 填 DOMAIN 和 IMAGE_REGISTRY
 #   docker compose up -d
 #
-# 源码构建（修改了代码或首次开发）：
+# 同机 NPM 部署（NPM 和 blog 在同一台机器）：
+#   docker compose -f docker-compose.yml -f docker-compose.same-host.yml up -d
+#
+# 源码构建：
 #   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
 #
-# 本地测试（不依赖 NPM，暴露端口）：
+# 本地开发（不依赖 NPM）：
 #   docker compose -f docker-compose.yml -f docker-compose.build.yml -f docker-compose.local.yml up -d --build
 
 services:
@@ -32,6 +40,8 @@ services:
     image: ${IMAGE_REGISTRY:-ghcr.io/lau0x/my-blog}-strapi:${IMAGE_TAG:-latest}
     container_name: blog-strapi
     restart: unless-stopped
+    ports:
+      - "1337:1337"
     environment:
       DATABASE_CLIENT: postgres
       DATABASE_HOST: postgres
@@ -55,12 +65,13 @@ services:
         condition: service_healthy
     networks:
       - blog-net
-      - npm-net
 
   nuxt:
     image: ${IMAGE_REGISTRY:-ghcr.io/lau0x/my-blog}-nuxt:${IMAGE_TAG:-latest}
     container_name: blog-nuxt
     restart: unless-stopped
+    ports:
+      - "3000:3000"
     environment:
       NODE_ENV: production
       NITRO_HOST: 0.0.0.0
@@ -73,11 +84,7 @@ services:
       - strapi
     networks:
       - blog-net
-      - npm-net
 
 networks:
   blog-net:
     driver: bridge
-  npm-net:
-    external: true
-    name: ${NPM_NETWORK}
