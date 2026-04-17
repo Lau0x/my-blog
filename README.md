@@ -9,6 +9,7 @@ Nuxt 3 + Strapi 5 + PostgreSQL 前后端分离博客，Docker 编排，Nginx Pro
 本 README 是**总览索引**，具体部署/运维场景请查 [`docs/deployment/`](./docs/deployment/)：
 
 - 🚀 [**5 分钟快速上手**](./docs/deployment/quick-start.md) — 跨机 NPM 部署（主流场景）
+- 🔄 [日常升级 / 回滚](./docs/deployment/upgrade.md) — `./scripts/upgrade.sh` 一条命令
 - 🌐 [跨机部署指南](./docs/deployment/cross-host.md) — NPM 和博客在不同服务器（含防火墙配置）
 - 🏠 [同机部署指南](./docs/deployment/same-host.md) — NPM 和博客在同一台
 - 🔧 [NPM 反代完整配置](./docs/deployment/npm-setup.md) — 8 条 Custom Location + SSL 签发
@@ -165,8 +166,10 @@ git add . && git commit -m "feat: 新增特性"
 git push origin main
 # CI 自动构建 + 推镜像（约 3-5 分钟）
 # 然后服务器：
-ssh server "cd /opt/my-blog && docker compose pull && docker compose up -d"
+ssh server "cd /opt/my-blog && ./scripts/upgrade.sh"
 ```
+
+> 💡 `upgrade.sh` 比手动 `pull && up -d` 多做了：.env 备份 / 数据备份 / git pull / 字段对齐检查 / BREAKING CHANGE 检测 / 回滚指引。详见 [docs/deployment/upgrade.md](./docs/deployment/upgrade.md)。
 
 ### 备份
 ```bash

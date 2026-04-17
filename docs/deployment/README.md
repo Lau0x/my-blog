@@ -14,6 +14,7 @@
 ## 按主题查阅
 
 - 🚀 [**5 分钟快速上手**](./quick-start.md) — 最常见的跨机部署路径
+- 🔄 [日常升级 / 回滚 / 数据迁移](./upgrade.md) — `./scripts/upgrade.sh` + 破坏性升级应对 + 回滚预案
 - 🌐 [NPM 反代配置](./npm-setup.md) — Proxy Host + Custom Locations 完整清单 + SSL 签发
 - 🔥 [故障排查手册](./troubleshooting.md) — widget 404 / SSL 签发失败 / Tailscale 陷阱 / GHCR 镜像 404
 
