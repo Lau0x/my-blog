@@ -91,14 +91,24 @@ docker compose restart
 
 ### Level 2：回滚代码 + 镜像 tag
 
-如果是镜像层面的问题（新版 bug），需要把镜像 tag 锁到上一个已知好版本：
+如果是镜像层面的问题（新版 bug），把镜像 tag 锁到上一个已知好版本：
 
-1. **先把镜像 pin 成具体 tag**（不要用 `:latest`）
-   - 去 GitHub Packages 找上一个版本的 tag（例如 commit SHA `d8c206a` 对应的镜像）
-   - 改 `.env`：
-     ```
-     IMAGE_TAG=sha-d8c206a   # 或具体版本号
-     ```
+1. **先把镜像 pin 成具体 tag**（不要留在 `:latest`）
+
+   CI 每次构建自动打三套 tag（`.github/workflows/docker-publish.yml`），任选一套回滚：
+
+   | Tag 形式 | 示例 | 适用场景 |
+   |---------|------|---------|
+   | **语义化版本**（推荐） | `1.1.0` / `1.1` | 已经发过 Release 的快照版本，最清晰 |
+   | Git commit SHA | `sha-d8c206a` | 还没发 Release 的中间版本 |
+   | 分支 tag | `main` | 基本等同 `latest`，不建议 pin |
+
+   改 `.env`（**注意 semver tag 不带 `v` 前缀**，`docker/metadata-action` 自动剥掉了）：
+   ```
+   IMAGE_TAG=1.1.0        # ✅ 推荐——锁到 v1.1.0 Release 快照
+   # IMAGE_TAG=sha-05a1802 # ✅ 备选——锁到具体 commit
+   # IMAGE_TAG=latest       # ❌ 默认值，不适合回滚
+   ```
 
 2. **回滚代码**
    ```bash
@@ -109,6 +119,8 @@ docker compose restart
    ```bash
    docker compose up -d
    ```
+
+4. **验证**——容器起来后看日志正常 + 前台可访问，再把 `:latest` 标签从心里抹掉。
 
 ### Level 3：数据库回滚
 
@@ -127,24 +139,57 @@ docker compose up -d
 
 ⚠️ **恢复前务必停 strapi**，否则新旧数据会串。
 
-## 生产环境的 Pin 版本策略
+## 生产环境的 Pin 版本策略（推荐用法）
 
-默认 `IMAGE_TAG=latest` 适合快速尝鲜，不适合严肃生产环境——因为：
-- `:latest` 会被 CI 持续覆盖，无法快速定位"哪个版本引入了 bug"
-- 无法做精确回滚（`:latest` 的历史版本不可访问）
-- 多机部署时可能拉到不同版本（时间差导致）
+默认 `IMAGE_TAG=latest` 适合快速尝鲜，**不适合严肃生产环境**——因为：
 
-**严肃生产**建议：
+- `:latest` 会被每次 main 构建持续覆盖，无法快速定位"哪个版本引入了 bug"
+- 没有精确回滚锚点——你不知道"昨天的 latest" digest 是啥
+- 多机部署可能拉到不同版本（两台机器各自 pull 的时刻不同）
 
-1. CI workflow 改成**按 commit SHA 和语义化版本双重打 tag**（如 `sha-abc1234`、`v1.2.0`）
-2. 服务器 `.env` 里 pin 具体 tag：
+### 好消息：CI 已经在打多套 tag，直接用就行
+
+`.github/workflows/docker-publish.yml` 用 `docker/metadata-action` 的 semver 规则，**每次 push git tag（如 `v1.1.0`）都会自动在 GHCR 上产出三个不变的镜像 tag**：
+
+| GHCR 镜像 tag | 由什么触发 | 含义 |
+|--------------|----------|------|
+| `1.1.0` | `git push v1.1.0` | 该 Release 的不可变快照（`v` 前缀被自动剥掉，行业惯例） |
+| `1.1` | `git push v1.1.0` | 追最新的 1.1.x 小版本 |
+| `sha-05a1802` | 每次 main push | 按 commit SHA 定位 |
+| `latest` | 每次 main push | 跟随 main，会漂移 |
+
+**验证镜像 tag 真实存在**（不依赖 GitHub UI）：
+```bash
+docker manifest inspect ghcr.io/<owner>/my-blog-nuxt:1.1.0
+# 返回 JSON = 存在；"manifest unknown" = 不存在
+```
+
+### 严肃生产四步走
+
+1. **服务器 `.env` 把 `IMAGE_TAG` 从 `latest` 改成具体 semver**：
+   ```bash
+   IMAGE_TAG=1.1.0          # 锁到 v1.1.0 Release 快照
    ```
-   IMAGE_TAG=v1.2.0
-   ```
-3. 升级时手动改 `.env` 的 `IMAGE_TAG` 到新版本，而不是 `:latest` 跑 pull
-4. 保留近 3-5 个老版本 tag 以备回滚
 
-这套做法让升级/回滚变成**确定性**操作——任何时刻你都知道跑的是哪个版本。
+2. **发版流程变成显式动作**——上游发新 Release（如 `v1.2.0`）后：
+   ```bash
+   # 服务器上
+   vim .env                  # 把 IMAGE_TAG=1.1.0 改成 IMAGE_TAG=1.2.0
+   ./scripts/upgrade.sh      # 此时 pull 的就是 v1.2.0 快照
+   ```
+   这样升级变成**一次有意识的决定**，而不是 `:latest` 被动漂移。
+
+3. **出 bug 秒回滚**——把 `IMAGE_TAG` 改回上一版 semver：
+   ```bash
+   vim .env                  # IMAGE_TAG=1.1.0
+   docker compose up -d      # 10 秒内回到旧版
+   ```
+
+4. **保留近 3-5 个版本 tag**——GHCR 默认永久保留，不用特别操作。真的要清理看 GitHub → Packages → Manage versions。
+
+### 为什么 `1.1.0` 没带 `v` 前缀
+
+`docker/metadata-action` 的 `type=semver,pattern={{version}}` 会从 git tag 里提取**纯数字版本号**——所以 git tag `v1.1.0` → 镜像 tag `1.1.0`。这是 Docker 生态惯例（Docker Hub / GHCR / ECR 通用）。别写 `IMAGE_TAG=v1.1.0`，那个 tag 不存在。
 
 ## 常见问题
 
