@@ -72,6 +72,15 @@ docker compose \
 
 Schema 改动的关键点：**你在浏览器里点的操作，Strapi 会自动把结果写回本地 `backend/src/api/<name>/content-types/<name>/schema.json` 文件**（通过 docker volume 挂载）。所以改完 git status 能看到改动。
 
+### Step 2.5 · 图片策略（新文章正文里带图的场景）
+
+文章 content 里的图片（markdown `![]()` 或 HTML `<img>`）有**两条路径**，你发文后选一条：
+
+- **🅰 保持外链（默认，零配置）**：粘贴来的 `![](https://files.mdnice.com/xxx.png)` 直接用，前端已加 `referrerpolicy="no-referrer"` 绕过防盗链
+- **🅱 本地化**：发完文章后跑 `node scripts/migrate-images.mjs`，外链图自动下载到 Strapi Media Library，content 的 URL 被替换成 `/uploads/xxx.jpg`
+
+详见 [image-migration.md](./image-migration.md)。
+
 ### Step 3 · 本地 smoke test
 
 - admin 能登录
@@ -133,6 +142,52 @@ Strapi 启动**不会自动迁移老数据**。标准流程：
 | 删一个字段 | ✅ | 要 DROP COLUMN |
 | 改字段类型 | ✅ | 要 ALTER + 可能要数据转换 |
 | 重命名字段 | ✅ | 要 RENAME + 更新前端引用 |
+| 字段类型从 `json` → `component` | ✅ | 要 DROP COLUMN + 重启 Strapi（见下文案例） |
+
+---
+
+## 实战案例：tags 字段从 JSON 升级为 Repeatable Component
+
+**背景**：一开始 `tags` 字段用 `"type": "json"` 存，admin 是黑色 Monaco 编辑器，要手打 `["医路", "思考"]` 这种 JSON 数组——对非程序员不友好。升级成 Repeatable Component 后，admin 变成点 **+ Add an entry** 加一个 `name` 输入框的交互，小白也能用。
+
+**踩坑过程**（真实的 3.25 → 3.75）：
+
+1. 以为改完 `schema.json` 里 `"type": "json"` → `"type": "component"` 就完事了——Strapi 重启了，日志说 `started successfully`
+2. admin 里还是 JSON 编辑器！以为是浏览器缓存，硬刷新无效
+3. 直接查 DB：`articles.tags` **还是 jsonb 列**，但 `components_shared_tags` 和 `articles_cmps` 关联表已经建好
+4. 根因：**Strapi 5 对破坏性 schema 变更自我保护——新 component 的空表建了，但老 jsonb 列不敢 DROP**，admin 渲染时以 DB 为准就回退到 JSON UI
+
+**解法（3 步闭环）**：
+
+```bash
+# ① 先备份（这步做完才敢往下）
+./scripts/backup.sh    # 或本地 dev: docker compose exec postgres pg_dump -U blog blog > /tmp/before.sql
+
+# ② 手动 DROP 老列
+docker compose exec postgres psql -U blog -d blog -c "ALTER TABLE articles DROP COLUMN tags;"
+
+# ③ 重启 Strapi（它检测到没有老列，按新 schema 建关联）
+docker compose restart strapi
+```
+
+**验证闭环**（三层证据都要查）：
+
+```bash
+# ✓ 新 component 表存在
+docker compose exec postgres psql -U blog -d blog -c "\dt components_shared_*"
+
+# ✓ articles_cmps 关联表存在（Strapi 5 component 的核心桥梁）
+docker compose exec postgres psql -U blog -d blog -c "\dt articles_cmps"
+
+# ✓ articles 表里老 tags 列已消失
+docker compose exec postgres psql -U blog -d blog -c "\d articles" | grep -i tag || echo "OK: no tag column"
+```
+
+三个都过 = 端到端闭环。admin 硬刷新后 tags 字段会变成 **+ Add an entry** 按钮。
+
+**前端兼容**：index.vue 和 [slug].vue 已用 `tagText(t) = typeof t === 'string' ? t : t.name` 同时兼容新旧格式，无需改代码。但接口返回会从 `tags: ["医路"]` 变成 `tags: [{id: 1, name: "医路"}]`，之前在 JSON 字段里填过的 tag 会全部丢失需要手动重填。
+
+**生产升级特别注意**：上生产前先 `backup.sh`，然后先跑 SQL `ALTER TABLE articles DROP COLUMN tags`，**再跑** `upgrade.sh`。顺序颠倒会出现短暂的 schema/DB 不一致窗口。
 
 ---
 
