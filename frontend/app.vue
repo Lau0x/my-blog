@@ -1,12 +1,12 @@
 <script setup lang="ts">
-const { siteName, footerHTML } = useSiteConfig()
+const { siteName, footerHTML, navItems: userNavItems } = useSiteConfig()
 
 useHead(() => ({
   titleTemplate: (title?: string) =>
     title ? `${title} · ${siteName.value}` : siteName.value,
 }))
 
-// 动态导航：读 CustomPage where showInNav=true，按 navOrder 排序
+// Fallback 源：showInNav=true 的 CustomPage
 interface NavPage { id: number; title: string; slug: string }
 const config = useRuntimeConfig()
 const base = import.meta.server ? `${config.apiInternal}/api` : config.public.apiBase
@@ -15,6 +15,25 @@ const { data: navData } = await useFetch<{ data: NavPage[] }>(
   { key: 'nav-pages' },
 )
 const navPages = computed<NavPage[]>(() => navData.value?.data ?? [])
+
+// 最终生效的 nav：
+//   ① 如果 SiteConfig.navItems 非空 → 100% 用它（完全自定义，支持外链）
+//   ② 否则 → 默认行为：首页 + 标签 + showInNav CustomPages
+interface FlatNav { label: string; path: string }
+const effectiveNav = computed<FlatNav[]>(() => {
+  if (userNavItems.value.length > 0) {
+    return userNavItems.value.map(it => ({ label: it.label, path: it.path }))
+  }
+  return [
+    { label: '首页', path: '/' },
+    { label: '标签', path: '/tags' },
+    ...navPages.value.map(p => ({ label: p.title, path: `/${p.slug}` })),
+  ]
+})
+
+function isExternal(p: string): boolean {
+  return /^https?:\/\//i.test(p)
+}
 </script>
 
 <template>
@@ -23,14 +42,20 @@ const navPages = computed<NavPage[]>(() => navData.value?.data ?? [])
       <div class="container">
         <NuxtLink to="/" class="brand">{{ siteName }}</NuxtLink>
         <nav>
-          <NuxtLink to="/" class="nav-link">首页</NuxtLink>
-          <NuxtLink to="/tags" class="nav-link">标签</NuxtLink>
-          <NuxtLink
-            v-for="p in navPages"
-            :key="p.id"
-            :to="`/${p.slug}`"
-            class="nav-link"
-          >{{ p.title }}</NuxtLink>
+          <template v-for="(it, i) in effectiveNav" :key="i">
+            <a
+              v-if="isExternal(it.path)"
+              :href="it.path"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="nav-link"
+            >{{ it.label }}</a>
+            <NuxtLink
+              v-else
+              :to="it.path"
+              class="nav-link"
+            >{{ it.label }}</NuxtLink>
+          </template>
         </nav>
       </div>
     </header>

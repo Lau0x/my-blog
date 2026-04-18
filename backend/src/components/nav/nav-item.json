@@ -1,0 +1,23 @@
+{
+  "collectionName": "components_nav_nav_items",
+  "info": {
+    "displayName": "导航项",
+    "icon": "link",
+    "description": "站点导航栏的一个链接项（内链如 / /tags /about 或外链 https://...）"
+  },
+  "options": {},
+  "attributes": {
+    "label": {
+      "type": "string",
+      "required": true
+    },
+    "path": {
+      "type": "string",
+      "required": true
+    },
+    "order": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}

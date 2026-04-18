@@ -1,3 +1,10 @@
+export interface NavItem {
+  id?: number
+  label: string
+  path: string
+  order?: number
+}
+
 interface SiteConfig {
   siteName?: string
   tagline?: string
@@ -5,6 +12,7 @@ interface SiteConfig {
   authorName?: string
   ogImage?: { url: string; alternativeText?: string } | null
   themeColor?: string
+  navItems?: NavItem[] | null
 }
 
 const DEFAULTS: Required<Pick<SiteConfig, 'siteName' | 'footerHTML'>> = {
@@ -43,5 +51,10 @@ export const useSiteConfig = () => {
     return m.url.startsWith('http') ? m.url : `${strapiPublicBase}${m.url}`
   })
 
-  return { cfg, siteName, tagline, authorName, themeColor, footerHTML, ogImageUrl }
+  const navItems = computed<NavItem[]>(() => {
+    const items = cfg.value.navItems ?? []
+    return [...items].sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
+  })
+
+  return { cfg, siteName, tagline, authorName, themeColor, footerHTML, ogImageUrl, navItems }
 }

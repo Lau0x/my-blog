@@ -34,6 +34,11 @@
     },
     "themeColor": {
       "type": "string"
+    },
+    "navItems": {
+      "type": "component",
+      "repeatable": true,
+      "component": "nav.nav-item"
     }
   }
 }
