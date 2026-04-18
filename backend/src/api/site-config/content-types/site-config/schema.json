@@ -1,0 +1,39 @@
+{
+  "kind": "singleType",
+  "collectionName": "site_configs",
+  "info": {
+    "singularName": "site-config",
+    "pluralName": "site-configs",
+    "displayName": "站点配置",
+    "description": "全站共享的品牌/文案配置（站点名、副标题、footer 等）"
+  },
+  "options": {
+    "draftAndPublish": false
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "siteName": {
+      "type": "string",
+      "default": "我的博客",
+      "required": true
+    },
+    "tagline": {
+      "type": "string"
+    },
+    "footerHTML": {
+      "type": "text",
+      "default": "© {{year}} Roy"
+    },
+    "authorName": {
+      "type": "string"
+    },
+    "ogImage": {
+      "type": "media",
+      "multiple": false,
+      "allowedTypes": ["images"]
+    },
+    "themeColor": {
+      "type": "string"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "kind": "collectionType",
+  "collectionName": "custom_pages",
+  "info": {
+    "singularName": "custom-page",
+    "pluralName": "custom-pages",
+    "displayName": "自定义页面",
+    "description": "站点里的独立页面，如 /about、/vps、/friends 等。通过 slug 访问。"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "pluginOptions": {},
+  "attributes": {
+    "title": {
+      "type": "string",
+      "required": true
+    },
+    "slug": {
+      "type": "uid",
+      "targetField": "title",
+      "required": true
+    },
+    "body": {
+      "type": "richtext"
+    },
+    "seoDescription": {
+      "type": "text"
+    },
+    "showInNav": {
+      "type": "boolean",
+      "default": false
+    },
+    "navOrder": {
+      "type": "integer",
+      "default": 0
+    }
+  }
+}
