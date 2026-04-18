@@ -5,6 +5,16 @@ useHead(() => ({
   titleTemplate: (title?: string) =>
     title ? `${title} · ${siteName.value}` : siteName.value,
 }))
+
+// 动态导航：读 CustomPage where showInNav=true，按 navOrder 排序
+interface NavPage { id: number; title: string; slug: string }
+const config = useRuntimeConfig()
+const base = import.meta.server ? `${config.apiInternal}/api` : config.public.apiBase
+const { data: navData } = await useFetch<{ data: NavPage[] }>(
+  `${base}/custom-pages?filters[showInNav][$eq]=true&sort=navOrder:asc&fields[0]=title&fields[1]=slug`,
+  { key: 'nav-pages' },
+)
+const navPages = computed<NavPage[]>(() => navData.value?.data ?? [])
 </script>
 
 <template>
@@ -14,6 +24,13 @@ useHead(() => ({
         <NuxtLink to="/" class="brand">{{ siteName }}</NuxtLink>
         <nav>
           <NuxtLink to="/" class="nav-link">首页</NuxtLink>
+          <NuxtLink to="/tags" class="nav-link">标签</NuxtLink>
+          <NuxtLink
+            v-for="p in navPages"
+            :key="p.id"
+            :to="`/${p.slug}`"
+            class="nav-link"
+          >{{ p.title }}</NuxtLink>
         </nav>
       </div>
     </header>
