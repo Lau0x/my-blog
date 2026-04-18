@@ -36,6 +36,11 @@
     },
     "publishedDate": {
       "type": "date"
+    },
+    "tags": {
+      "type": "component",
+      "repeatable": true,
+      "component": "shared.tag"
     }
   }
 }

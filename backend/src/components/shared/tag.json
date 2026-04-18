@@ -1,0 +1,15 @@
+{
+  "collectionName": "components_shared_tags",
+  "info": {
+    "displayName": "标签",
+    "icon": "price-tag",
+    "description": "文章标签（一篇文章可挂多个）"
+  },
+  "options": {},
+  "attributes": {
+    "name": {
+      "type": "string",
+      "required": true
+    }
+  }
+}
