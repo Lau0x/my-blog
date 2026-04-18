@@ -10,6 +10,7 @@ interface CustomPage {
   title: string
   slug: string
   body?: string
+  htmlBody?: string
   seoDescription?: string
 }
 
@@ -19,8 +20,15 @@ const { data, error } = await useFetch<{ data: CustomPage[] }>(
 
 const page = computed(() => data.value?.data?.[0])
 
-const rendered = computed(() => parseArticle(page.value?.body || ''))
-const html = computed(() => rendered.value.html)
+// 渲染模式：优先 htmlBody（raw HTML，高级用户手写），其次 body（markdown 默认路径）
+const useRawHtml = computed(() => !!page.value?.htmlBody?.trim())
+
+const markdownRendered = computed(() =>
+  useRawHtml.value ? { html: '', toc: [] } : parseArticle(page.value?.body || ''),
+)
+const renderedHtml = computed(() =>
+  useRawHtml.value ? (page.value?.htmlBody || '') : markdownRendered.value.html,
+)
 
 useHead(() => ({
   title: page.value?.title || '未找到',
@@ -36,11 +44,19 @@ if (import.meta.server && !page.value) {
 </script>
 
 <template>
-  <article v-if="page" class="custom-page">
-    <header class="page-header">
-      <h1 class="page-title">{{ page.title }}</h1>
-    </header>
-    <div class="prose page-body" v-html="html" />
+  <article v-if="page" class="custom-page" :class="{ 'raw-html-mode': useRawHtml }">
+    <!-- 自定义 HTML 模式：不自动渲染 title / .prose 样式框，把布局全权交给用户 -->
+    <template v-if="useRawHtml">
+      <div class="page-body-raw" v-html="renderedHtml" />
+    </template>
+
+    <!-- Markdown 模式：带自动标题 + .prose 样式 -->
+    <template v-else>
+      <header class="page-header">
+        <h1 class="page-title">{{ page.title }}</h1>
+      </header>
+      <div class="prose page-body" v-html="renderedHtml" />
+    </template>
   </article>
   <div v-else-if="error" class="err">加载失败：{{ error.message }}</div>
   <div v-else class="err">页面不存在</div>
@@ -49,6 +65,11 @@ if (import.meta.server && !page.value) {
 <style scoped>
 .custom-page {
   padding: 2.5rem 0 3rem;
+}
+
+/* raw HTML 模式下移除默认内边距，让用户 HTML 完全掌控布局 */
+.custom-page.raw-html-mode {
+  padding: 0;
 }
 
 .page-header {
@@ -69,6 +90,11 @@ if (import.meta.server && !page.value) {
 
 .page-body {
   margin-top: 1rem;
+}
+
+/* raw 容器没有任何默认样式——用户自己用 <style> 或内联样式定义一切 */
+.page-body-raw {
+  /* intentionally empty */
 }
 
 .err {
