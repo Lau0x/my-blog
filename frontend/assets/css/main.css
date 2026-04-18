@@ -1,0 +1,353 @@
+/* ============================================
+ * 全局 CSS 变量 + 排版基础
+ * ============================================ */
+
+:root {
+  /* 字体栈 */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'PingFang SC',
+               'Microsoft YaHei', 'Helvetica Neue', sans-serif;
+  --font-serif: 'LXGW WenKai', 'LXGW WenKai Screen', 'Source Han Serif SC',
+                'Noto Serif SC', Georgia, serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, 'Courier New', monospace;
+
+  /* 色彩系统 */
+  --fg: #1f2328;
+  --fg-soft: #4b5563;
+  --muted: #6b7280;
+  --border: #e5e7eb;
+  --border-soft: #f1f3f5;
+  --bg: #fdfcfa;
+  --bg-card: #ffffff;
+  --bg-code: #f6f8fa;
+  --accent: #3b6cb5;
+  --accent-hover: #1d4ed8;
+
+  /* 尺寸 */
+  --radius-sm: 6px;
+  --radius: 10px;
+  --radius-lg: 14px;
+
+  /* 阴影 */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 17px;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  font-feature-settings: 'kern', 'liga', 'palt';
+}
+
+a {
+  color: var(--accent);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+a:hover { color: var(--accent-hover); }
+
+/* 中文字体混排优化 */
+:lang(zh), :lang(zh-CN) {
+  font-feature-settings: 'palt' 1;
+}
+
+/* 选中颜色 */
+::selection {
+  background: rgba(59, 108, 181, 0.18);
+  color: var(--fg);
+}
+
+/* ============================================
+ * Prose — Markdown 正文渲染样式
+ * 应用在 .prose 容器上（通常是 v-html 包裹的 div）
+ * ============================================ */
+
+.prose {
+  color: var(--fg);
+  font-size: 17px;
+  line-height: 1.85;
+  word-wrap: break-word;
+}
+
+/* 标题层级 */
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  font-family: var(--font-serif);
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--fg);
+  scroll-margin-top: 5rem;
+  letter-spacing: -0.01em;
+}
+.prose h1 { font-size: 2rem; margin: 2.5rem 0 1rem; }
+.prose h2 {
+  font-size: 1.5rem;
+  margin: 2.5rem 0 1rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--border-soft);
+}
+.prose h3 { font-size: 1.25rem; margin: 2rem 0 0.75rem; }
+.prose h4 { font-size: 1.1rem; margin: 1.5rem 0 0.5rem; }
+
+/* 段落和间距 */
+.prose p {
+  margin: 1.1rem 0;
+  text-align: justify;
+  text-justify: inter-ideograph;
+}
+.prose p:first-child { margin-top: 0; }
+
+/* 列表 */
+.prose ul,
+.prose ol {
+  margin: 1.1rem 0;
+  padding-left: 1.5rem;
+}
+.prose li {
+  margin: 0.35rem 0;
+  line-height: 1.8;
+}
+.prose li::marker {
+  color: var(--muted);
+}
+.prose ul > li::marker {
+  content: '•  ';
+  font-weight: bold;
+  color: var(--accent);
+}
+
+/* 行内代码 */
+.prose code:not(pre code) {
+  font-family: var(--font-mono);
+  font-size: 0.92em;
+  background: var(--bg-code);
+  padding: 0.15em 0.45em;
+  border-radius: 4px;
+  color: #c7254e;
+  border: 1px solid var(--border-soft);
+}
+
+/* ============================================
+ * 代码块容器：.code-block 包住 <pre>，承载右上角语言标签 + 复制按钮
+ * ============================================ */
+.prose .code-block {
+  position: relative;
+  margin: 1.5rem 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+}
+
+.prose .code-block pre {
+  font-family: var(--font-mono);
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 2.35rem 1.2rem 1.1rem;  /* 上预留空间给语言标签/按钮 */
+  overflow-x: auto;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  margin: 0;
+  box-shadow: none;
+}
+
+.prose .code-block pre code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+/* 语言标签 */
+.prose .code-block .code-lang {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  background: var(--bg-card);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-bottom-right-radius: 6px;
+  user-select: none;
+}
+
+/* 复制按钮 */
+.prose .code-block .code-copy {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.3rem 0.6rem;
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--fg-soft);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+.prose .code-block:hover .code-copy {
+  opacity: 1;
+}
+.prose .code-block .code-copy:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: #fff;
+}
+.prose .code-block .code-copy svg {
+  display: block;
+}
+.prose .code-block .code-copy.copied {
+  color: #16a34a;
+  border-color: #16a34a;
+}
+.prose .code-block .code-copy.copied svg { display: none; }
+
+/* 回退：没进 .code-block 的 <pre>（非 code fence，或旧内容兼容） */
+.prose pre:not(.code-block pre) {
+  font-family: var(--font-mono);
+  background: var(--bg-code);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+  overflow-x: auto;
+  font-size: 0.9rem;
+  line-height: 1.65;
+  margin: 1.5rem 0;
+}
+.prose pre:not(.code-block pre) code {
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+/* 引用块 */
+.prose blockquote {
+  margin: 1.5rem 0;
+  padding: 0.75rem 1.25rem;
+  border-left: 4px solid var(--accent);
+  background: linear-gradient(90deg, rgba(59, 108, 181, 0.06) 0%, rgba(59, 108, 181, 0.02) 100%);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  color: var(--fg-soft);
+  font-style: italic;
+}
+.prose blockquote p { margin: 0.5rem 0; }
+.prose blockquote p:first-child { margin-top: 0; }
+.prose blockquote p:last-child { margin-bottom: 0; }
+
+/* 链接 */
+.prose a {
+  color: var(--accent);
+  text-decoration: none;
+  background-image: linear-gradient(transparent 60%, rgba(59, 108, 181, 0.18) 60%);
+  background-size: 100% 100%;
+  transition: background-size 0.2s ease;
+}
+.prose a:hover {
+  color: var(--accent-hover);
+  background-image: linear-gradient(transparent 0%, rgba(59, 108, 181, 0.18) 0%);
+}
+
+/* 图片 */
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  margin: 1.5rem 0;
+  display: block;
+  cursor: zoom-in;
+  transition: opacity 0.2s ease;
+}
+.prose img:hover {
+  opacity: 0.92;
+}
+
+/* medium-zoom overlay 在放大状态时的样式微调 */
+.medium-zoom-overlay {
+  z-index: 999;
+}
+.medium-zoom-image--opened {
+  z-index: 1000;
+  border-radius: 0;
+  cursor: zoom-out;
+}
+
+/* 分隔线 */
+.prose hr {
+  border: none;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+  margin: 3rem 0;
+}
+
+/* 表格 */
+.prose table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1.5rem 0;
+  font-size: 0.95em;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+.prose th,
+.prose td {
+  padding: 0.6rem 1rem;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+}
+.prose th {
+  background: var(--bg-code);
+  font-weight: 600;
+  color: var(--fg);
+}
+.prose tbody tr:nth-child(even) {
+  background: var(--bg-code);
+}
+.prose tbody tr:hover {
+  background: rgba(59, 108, 181, 0.04);
+}
+
+/* 加粗和斜体 */
+.prose strong {
+  color: var(--fg);
+  font-weight: 600;
+}
+.prose em {
+  font-style: italic;
+  color: var(--fg-soft);
+}

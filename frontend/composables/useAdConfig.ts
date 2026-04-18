@@ -24,8 +24,13 @@ export const useAdConfig = () => {
     ? `${config.apiInternal}/api`
     : config.public.apiBase
   const strapiPublicBase = (config.public.apiBase as string).replace(/\/api\/?$/, '')
-  const imgUrl = (m?: AdSlotData['image']) =>
-    m?.url ? (m.url.startsWith('http') ? m.url : `${strapiPublicBase}${m.url}`) : ''
+  // 接受 Strapi media 对象或直接 URL 字符串（如 cover.formats.large.url）
+  const imgUrl = (m?: AdSlotData['image'] | string | null) => {
+    if (!m) return ''
+    const url = typeof m === 'string' ? m : m.url
+    if (!url) return ''
+    return url.startsWith('http') ? url : `${strapiPublicBase}${url}`
+  }
 
   const { data } = useFetch<{ data: AdConfig | null }>(`${fetchBase}/ad-config`, {
     key: 'ad-config',
