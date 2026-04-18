@@ -39,3 +39,11 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# 图片迁移脚本：本地 token 和 URL 缓存不入库
+.migrate-env
+.migrate-cache.json
+
+# 临时调试文件（curl 输出、API 响应快照等）
+.tmp-*.json
+.tmp-*.log

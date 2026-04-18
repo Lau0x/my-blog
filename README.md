@@ -14,6 +14,7 @@ Nuxt 3 + Strapi 5 + PostgreSQL 前后端分离博客，Docker 编排，Nginx Pro
 - 🌐 [跨机部署指南](./docs/deployment/cross-host.md) — NPM 和博客在不同服务器（含防火墙配置）
 - 🏠 [同机部署指南](./docs/deployment/same-host.md) — NPM 和博客在同一台
 - 🔧 [NPM 反代完整配置](./docs/deployment/npm-setup.md) — 8 条 Custom Location + SSL 签发
+- 🖼️ [图片策略](./docs/deployment/image-migration.md) — 外链（默认 · 零配置）vs 本地化（`migrate-images.mjs` 一键转 `/uploads`）
 - 🔥 [故障排查手册](./docs/deployment/troubleshooting.md) — 常见坑大全（widget 404 / SSL / Tailscale 等）
 
 ## 技术栈
