@@ -168,9 +168,8 @@ client_max_body_size 50M;
 ./scripts/init.sh
 # .env 里 DOMAIN 随便填（localhost 也行），IMAGE_REGISTRY 填占位也行（本地不 pull）
 
-./scripts/dev.sh up -d --build   # 首次 / 前端改过
-# 之后无脑：./scripts/dev.sh up -d     # 不重 build
-# 常用命令直接敲 `./scripts/dev.sh` 会打印 cheatsheet
+./scripts/dev.sh up -d --build   # ⭐ 每次都这条，无脑加 --build
+# 其他命令（down / logs / ps 等）直接敲 `./scripts/dev.sh` 看 cheatsheet
 
 # 访问 http://localhost:3001 (前台) / http://localhost:1337/admin (后台)
 ```

@@ -47,12 +47,12 @@
 
 ```bash
 cd /path/to/my-blog
-./scripts/dev.sh up -d --build        # 首次 / 前端代码改过
-# 之后若没改前端，直接：
-# ./scripts/dev.sh up -d
+./scripts/dev.sh up -d --build        # ⭐ 每次都加 --build（Nuxt 代码是 build-time 打镜像的）
 ```
 
-> `dev.sh` 是 `docker compose -f base -f build -f local` 三合一封装。直接敲 `./scripts/dev.sh`（无参数）会打印所有常用命令 cheatsheet。
+> **为什么永远带 `--build`**：Nuxt 没有 volume mount 热重载，前端改动必须重新 build 才会生效。Docker layer cache 会让没改的部分几秒跳过，加了绝不亏。
+>
+> `dev.sh` 是 `docker compose -f base -f build -f local` 三合一封装，其他子命令（down / logs / exec 等）都透传。直接敲 `./scripts/dev.sh`（无参数）会打印 cheatsheet。
 
 访问：
 
