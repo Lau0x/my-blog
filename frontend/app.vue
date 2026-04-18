@@ -1,8 +1,17 @@
+<script setup lang="ts">
+const { siteName, footerHTML } = useSiteConfig()
+
+useHead(() => ({
+  titleTemplate: (title?: string) =>
+    title ? `${title} · ${siteName.value}` : siteName.value,
+}))
+</script>
+
 <template>
   <div class="site">
     <header class="site-header">
       <div class="container">
-        <NuxtLink to="/" class="brand">我的博客</NuxtLink>
+        <NuxtLink to="/" class="brand">{{ siteName }}</NuxtLink>
         <nav>
           <NuxtLink to="/" class="nav-link">首页</NuxtLink>
         </nav>
@@ -15,9 +24,11 @@
 
     <footer class="site-footer">
       <div class="container">
-        <p>&copy; {{ new Date().getFullYear() }} Roy</p>
+        <p v-html="footerHTML" />
       </div>
     </footer>
+
+    <BackToTop />
   </div>
 </template>
 
@@ -84,4 +95,6 @@
 }
 
 .site-footer p { margin: 0; }
+.site-footer a { color: var(--fg-soft); }
+.site-footer a:hover { color: var(--accent); }
 </style>
