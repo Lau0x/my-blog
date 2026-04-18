@@ -25,7 +25,7 @@
       "type": "richtext"
     },
     "htmlBody": {
-      "type": "text"
+      "type": "richtext"
     },
     "seoDescription": {
       "type": "text"
