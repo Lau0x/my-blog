@@ -41,7 +41,7 @@ Nuxt 3 + Strapi 5 + PostgreSQL 前后端分离博客，Docker 编排，Nginx Pro
 | **生产 / 跨机 NPM**（默认） | `docker compose up -d` | NPM 在独立服务器，博客这台只跑应用，端口 3000/1337 发布到公网（配合防火墙只放行 NPM IP） |
 | 生产 / 同机 NPM | `docker compose -f docker-compose.yml -f docker-compose.same-host.yml up -d` | NPM 和博客跑在同一台，走 docker 内网直连，不发布端口 |
 | 源码构建 | `docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build` | 改代码、fork 定制 |
-| 本地开发 | `docker compose -f docker-compose.yml -f docker-compose.build.yml -f docker-compose.local.yml up -d --build` | 无 NPM 本地调试，暴露 3000/1337 |
+| 本地开发 | `./scripts/dev.sh up -d --build` | 无 NPM 本地调试，暴露 3000/1337 · `dev.sh` 是三合一封装 |
 
 ---
 
@@ -168,11 +168,9 @@ client_max_body_size 50M;
 ./scripts/init.sh
 # .env 里 DOMAIN 随便填（localhost 也行），IMAGE_REGISTRY 填占位也行（本地不 pull）
 
-docker compose \
-  -f docker-compose.yml \
-  -f docker-compose.build.yml \
-  -f docker-compose.local.yml \
-  up -d --build
+./scripts/dev.sh up -d --build   # 首次 / 前端改过
+# 之后无脑：./scripts/dev.sh up -d     # 不重 build
+# 常用命令直接敲 `./scripts/dev.sh` 会打印 cheatsheet
 
 # 访问 http://localhost:3001 (前台) / http://localhost:1337/admin (后台)
 ```

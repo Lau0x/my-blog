@@ -47,12 +47,12 @@
 
 ```bash
 cd /path/to/my-blog
-docker compose \
-  -f docker-compose.yml \
-  -f docker-compose.build.yml \
-  -f docker-compose.local.yml \
-  up -d --build
+./scripts/dev.sh up -d --build        # 首次 / 前端代码改过
+# 之后若没改前端，直接：
+# ./scripts/dev.sh up -d
 ```
+
+> `dev.sh` 是 `docker compose -f base -f build -f local` 三合一封装。直接敲 `./scripts/dev.sh`（无参数）会打印所有常用命令 cheatsheet。
 
 访问：
 
