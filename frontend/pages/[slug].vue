@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { parseArticle } from '~/utils/markdown'
+import { parseArticle, autoExternalLink } from '~/utils/markdown'
 
 const route = useRoute()
 const config = useRuntimeConfig()
@@ -27,7 +27,9 @@ const markdownRendered = computed(() =>
   useRawHtml.value ? { html: '', toc: [] } : parseArticle(page.value?.body || ''),
 )
 const renderedHtml = computed(() =>
-  useRawHtml.value ? (page.value?.htmlBody || '') : markdownRendered.value.html,
+  useRawHtml.value
+    ? autoExternalLink(page.value?.htmlBody || '')
+    : markdownRendered.value.html,
 )
 
 useHead(() => ({

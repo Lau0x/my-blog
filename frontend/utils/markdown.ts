@@ -69,5 +69,29 @@ export function parseArticle(content: string): { html: string; toc: TocItem[] } 
     return `<img${a}>`
   })
 
+  // 外链自动新窗口打开
+  raw = autoExternalLink(raw)
+
   return { html: raw, toc: list }
+}
+
+/**
+ * 把 HTML 字符串里所有指向 http(s) 外链的 <a> 自动加上
+ *   target="_blank" rel="noopener noreferrer"
+ *
+ * 已经显式写了 target= 的不覆盖（用户故意要 _self 时保留）。
+ * 锚点（#xxx）、内链（/xxx）、邮件（mailto:）不处理。
+ */
+export function autoExternalLink(html: string): string {
+  if (!html) return html
+  return html.replace(
+    /<a\b([^>]*?)href\s*=\s*(["'])(https?:\/\/[^"']+)\2([^>]*)>/gi,
+    (match, pre: string, quote: string, href: string, post: string) => {
+      if (/\btarget\s*=/i.test(pre) || /\btarget\s*=/i.test(post)) return match
+      const relAttr = /\brel\s*=/i.test(pre) || /\brel\s*=/i.test(post)
+        ? ''
+        : ' rel="noopener noreferrer"'
+      return `<a${pre}href=${quote}${href}${quote}${post} target="_blank"${relAttr}>`
+    },
+  )
 }
