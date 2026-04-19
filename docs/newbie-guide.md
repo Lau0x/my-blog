@@ -6,8 +6,8 @@
 
 ## 📍 几个关键概念（1 分钟看完）
 
-- **前台** = 读者看到的博客，比如 `https://blog.yirenliu.com`
-- **后台（admin）** = 你登录进去发内容的地方，比如 `https://blog.yirenliu.com/admin`
+- **前台** = 读者看到的博客，比如 `https://blog.example.com`
+- **后台（admin）** = 你登录进去发内容的地方，比如 `https://blog.example.com/admin`
 - **Content Manager（内容管理）** = 发文章、发说说、改站点配置全在这里
 - **Collection Type**（多条，如"文章"）vs **Single Type**（一条，如"站点配置"）
 - **字段** = 一篇文章/一条说说里的每个输入框（标题、正文、封面图 等）
