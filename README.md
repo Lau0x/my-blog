@@ -9,6 +9,7 @@ Nuxt 3 + Strapi 5 + PostgreSQL 前后端分离博客，Docker 编排，Nginx Pro
 本 README 是**总览索引**，具体部署/运维场景请查 [`docs/deployment/`](./docs/deployment/)：
 
 - 🚀 [**5 分钟快速上手**](./docs/deployment/quick-start.md) — 跨机 NPM 部署（主流场景）
+- 👋 [**新手上手手册**](./docs/newbie-guide.md) — 给非程序员朋友的 admin 发文/建页/改站点名零前置手册
 - 🛠️ [**本地开发 → 生产发布工作流**](./docs/deployment/development-workflow.md) — 迭代博客的标准 SOP
 - 🔄 [日常升级 / 回滚](./docs/deployment/upgrade.md) — `./scripts/upgrade.sh` 一条命令
 - 🌐 [跨机部署指南](./docs/deployment/cross-host.md) — NPM 和博客在不同服务器（含防火墙配置）
