@@ -113,7 +113,7 @@ crontab -e
 脚本会在日志里标红，**不影响其他图和其他文章**。失败可能原因：
 
 - 源 CDN 返回 404 / 403 / 超时
-- 图片太大（Strapi 有 body 上限，默认 50MB）
+- 图片太大（Strapi v1.3.0+ body 上限 800MB；如果走 NPM 反代记得 NPM 的 `client_max_body_size` 也要调大，见 npm-setup.md）
 - 认证问题（脚本没发 Referer，但有些 CDN 检查 UA / 其他 header）
 
 手动检查：

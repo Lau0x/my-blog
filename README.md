@@ -119,14 +119,23 @@ docker compose -f docker-compose.yml -f docker-compose.same-host.yml up -d
 | `/i18n` | 同上 |
 | `/users-permissions` | 同上 |
 
-每条 Advanced 加：
+**Proxy Host 主表 Advanced（右上角齿轮 ⚙️）一次性写全局**：
 ```nginx
 proxy_set_header Host $host;
 proxy_set_header X-Real-IP $remote_addr;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 proxy_set_header X-Forwarded-Proto $scheme;
-client_max_body_size 50M;
+
+# 大文件上传（视频 800MB）
+client_max_body_size 800m;
+proxy_request_buffering off;
+proxy_read_timeout 600s;
+proxy_send_timeout 600s;
 ```
+
+**每条 Custom Location 的 Advanced 保持空**——主表的值会继承下去。如果历史版本里 Custom Location Advanced 残留 `client_max_body_size 50M;`，记得删掉（会覆盖主表导致视频上传卡在 50MB）。
+
+详细说明见 [docs/deployment/npm-setup.md](./docs/deployment/npm-setup.md)。
 
 **SSL**：Let's Encrypt → Force SSL + HTTP/2。
 

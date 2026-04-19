@@ -48,18 +48,40 @@ NPM 管理面板 → **Hosts** → **Proxy Hosts** → **Add Proxy Host**。
 | Forward Hostname / IP | `<博客服务器公网IP>` | `blog-strapi` |
 | Forward Port | `1337` | 同左 |
 
-⚠️ **每条 Custom Location 都要点右边齿轮 ⚙️**，在 Custom Nginx Configuration 里粘贴：
+### Proxy Host 主表 Advanced（⭐ 推荐：一处管全局）
+
+**Details / Custom Locations / SSL 三个 tab 的最右边有个 ⚙️ 齿轮图标**——那就是主表的 Advanced（容易漏，NPM 做成图标不是文字 tab）。点一下弹出大 textarea，粘贴：
 
 ```nginx
+# 公共反代头（让 Strapi 拿到真实 Host / 客户端 IP / 协议）
 proxy_set_header Host $host;
 proxy_set_header X-Real-IP $remote_addr;
 proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 proxy_set_header X-Forwarded-Proto $scheme;
-client_max_body_size 50M;
+
+# 大文件上传（视频 800MB 上限）
+client_max_body_size 800m;
+proxy_request_buffering off;    # 800MB 不在 NPM 缓冲，流式直达 Strapi
+proxy_read_timeout 600s;        # 慢网上传几分钟不超时
+proxy_send_timeout 600s;
 ```
 
+**为什么写主表而不是每条 Location**：nginx 的指令会从 server block **继承**到所有 location block，所以**写一次全局生效**。将来想升到 2GB 只改一个地方，不用改 8 条。
+
+### Custom Locations 标签的 Advanced（保持空）
+
+主表 Advanced 写了之后，Custom Location 自己的 Advanced 齿轮**保持空白**——不需要再写 `proxy_set_header` 和 `client_max_body_size`。
+
+> ⚠️ **历史项目升级注意**：如果你老版本的 Custom Location Advanced 里还写着 `client_max_body_size 50M;`，**删掉这行**。Location 里的值会覆盖主表，残留 50M 会让视频上传卡在 50MB。
+
+---
+
+### 配置参数说明
+
 - `proxy_set_header` 4 行：让后端拿到真实 Host 和客户端 IP（Strapi 的 SSR、防爬虫、日志记录都需要）
-- `client_max_body_size 50M`：Strapi 默认 Body 限制 1M，上传大图会 413，改成 50M 覆盖常见场景
+- `client_max_body_size 800m`：Strapi body 上限 800MB（对齐 `backend/config/middlewares.ts` 和 upload plugin 的值）
+- `proxy_request_buffering off`：NPM 不在本地缓冲整个文件，直接流式转发到 Strapi——避免 NPM 磁盘占满、减少上传延迟
+- `proxy_read_timeout / proxy_send_timeout 600s`：800MB 视频在慢网下可能需要几分钟，默认 60s 会超时断开
 
 ### SSL 标签
 
@@ -132,11 +154,23 @@ docker logs nginx-proxy-manager 2>&1 | tail -50 | grep -iE "error|challenge|cert
 根因：漏配了 `/content-manager` Custom Location。
 修复：参考 [troubleshooting.md](./troubleshooting.md#widget-报错-something-went-wrong)。
 
-### 上传图片 413 Request Entity Too Large
+### 上传图片 / 视频 413 Request Entity Too Large
 
-症状：admin Media Library 上传稍大图片报 413。
-根因：NPM 默认 Body 限制 1M。
-修复：Custom Location 的 Advanced 里加 `client_max_body_size 50M;`（上面配置已包含）。
+症状：admin Media Library 上传文件报 413。
+根因（三层可能）：
+1. NPM 层 `client_max_body_size` 没配或太小（默认 1M）
+2. Strapi 层 `body.formidable.maxFileSize` 太小（`backend/config/middlewares.ts`）
+3. Strapi upload 插件 `sizeLimit` 太小（`backend/config/plugins.ts`）
+
+修复：按上面"Proxy Host 主表 Advanced"章节**一次改 800m**。Strapi 端 v1.3.0 起默认 800MB，无需改动。
+
+如果 NPM 配了但还报 413，检查各 Custom Location 的 Advanced 里是不是有残留的 `client_max_body_size 50M;` 覆盖了主表。全部清空。
+
+### 上传中途断开（connection reset / 504 Gateway Timeout）
+
+症状：上传 ~100MB 以上文件，传了大半时报错。
+根因：NPM 反代默认 `proxy_read_timeout` / `proxy_send_timeout` 60s 太短。
+修复：主表 Advanced 里加 `proxy_read_timeout 600s;` + `proxy_send_timeout 600s;`（见上面配置）。
 
 ### 502 Bad Gateway
 

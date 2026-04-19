@@ -171,9 +171,10 @@
 
 ### 4. "上传图片/视频报错"
 
-- 视频最大 800MB
+- 视频最大 800MB（Strapi 限制，v1.3.0 起）
 - 图片格式支持 JPG / PNG / WebP / GIF
-- 如果服务器走 Nginx Proxy Manager，NPM 的 `client_max_body_size` 也要配大
+- 如果走 Nginx Proxy Manager 反代，NPM 主表 Advanced 的 `client_max_body_size` 也要配成 `800m`（详见 [docs/deployment/npm-setup.md](./deployment/npm-setup.md#proxy-host-主表-advanced-⭐-推荐一处管全局)）
+- 中途断开多半是 NPM `proxy_read_timeout` 默认 60s 太短——同一处改成 `600s`
 
 ---
 
