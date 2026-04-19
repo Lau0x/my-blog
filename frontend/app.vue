@@ -58,6 +58,7 @@ function isExternal(p: string): boolean {
               >{{ it.label }}</NuxtLink>
             </template>
           </nav>
+          <ThemeSwitcher />
           <NuxtLink to="/search" class="search-btn" aria-label="搜索">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="11" cy="11" r="7" />
