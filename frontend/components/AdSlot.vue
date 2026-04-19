@@ -76,8 +76,8 @@ onMounted(() => {
   top: 0.25rem;
   right: 0.5rem;
   font-size: 0.6875rem;
-  color: #999;
-  background: rgba(255,255,255,0.9);
+  color: var(--muted);
+  background: var(--bg-card);
   padding: 0 0.25rem;
   border-radius: 2px;
   z-index: 1;
@@ -95,7 +95,7 @@ onMounted(() => {
   padding: 1rem;
   border: 1px solid var(--border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--bg-card);
   transition: box-shadow 0.2s;
   text-decoration: none !important;
   color: inherit;

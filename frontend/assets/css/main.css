@@ -27,6 +27,9 @@
   --accent-alpha-mid: rgba(59, 108, 181, 0.18);
   --accent-alpha-hi: rgba(59, 108, 181, 0.04);
 
+  /* 半透明 header 背景（毛玻璃） */
+  --bg-header: rgba(253, 252, 250, 0.85);
+
   /* 行内代码色（亮色用暗红，暗色要切到亮粉） */
   --inline-code-fg: #c7254e;
 
@@ -61,6 +64,8 @@
   --accent-alpha-lo: rgba(91, 141, 239, 0.10);
   --accent-alpha-mid: rgba(91, 141, 239, 0.28);
   --accent-alpha-hi: rgba(91, 141, 239, 0.08);
+
+  --bg-header: rgba(15, 17, 21, 0.85);
 
   --inline-code-fg: #ff7f9d;
 

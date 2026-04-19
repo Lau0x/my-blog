@@ -91,7 +91,7 @@ function isExternal(p: string): boolean {
 }
 
 .site-header {
-  background: rgba(253, 252, 250, 0.85);
+  background: var(--bg-header);
   backdrop-filter: saturate(180%) blur(12px);
   -webkit-backdrop-filter: saturate(180%) blur(12px);
   border-bottom: 1px solid var(--border-soft);
