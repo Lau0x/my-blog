@@ -41,22 +41,30 @@ function isExternal(p: string): boolean {
     <header class="site-header">
       <div class="container">
         <NuxtLink to="/" class="brand">{{ siteName }}</NuxtLink>
-        <nav>
-          <template v-for="(it, i) in effectiveNav" :key="i">
-            <a
-              v-if="isExternal(it.path)"
-              :href="it.path"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="nav-link"
-            >{{ it.label }}</a>
-            <NuxtLink
-              v-else
-              :to="it.path"
-              class="nav-link"
-            >{{ it.label }}</NuxtLink>
-          </template>
-        </nav>
+        <div class="header-right">
+          <nav>
+            <template v-for="(it, i) in effectiveNav" :key="i">
+              <a
+                v-if="isExternal(it.path)"
+                :href="it.path"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="nav-link"
+              >{{ it.label }}</a>
+              <NuxtLink
+                v-else
+                :to="it.path"
+                class="nav-link"
+              >{{ it.label }}</NuxtLink>
+            </template>
+          </nav>
+          <NuxtLink to="/search" class="search-btn" aria-label="搜索">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3-3" />
+            </svg>
+          </NuxtLink>
+        </div>
       </div>
     </header>
 
@@ -107,9 +115,28 @@ function isExternal(p: string): boolean {
 }
 .brand:hover { color: var(--accent); }
 
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
 .site-header nav {
   display: flex;
   gap: 1.5rem;
+}
+.search-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: var(--fg-soft);
+  transition: all 0.15s ease;
+}
+.search-btn:hover {
+  color: var(--accent);
+  background: rgba(59, 108, 181, 0.08);
 }
 .nav-link {
   color: var(--fg-soft);
