@@ -10,7 +10,7 @@
                 'Noto Serif SC', Georgia, serif;
   --font-mono: 'JetBrains Mono', 'SF Mono', Menlo, Consolas, 'Courier New', monospace;
 
-  /* 色彩系统 */
+  /* 色彩系统 — 亮色（默认） */
   --fg: #1f2328;
   --fg-soft: #4b5563;
   --muted: #6b7280;
@@ -22,6 +22,14 @@
   --accent: #3b6cb5;
   --accent-hover: #1d4ed8;
 
+  /* 半透明色令牌：引用块背景 / 选中色 / 链接下划线 — 跟随 accent 变化 */
+  --accent-alpha-lo: rgba(59, 108, 181, 0.06);
+  --accent-alpha-mid: rgba(59, 108, 181, 0.18);
+  --accent-alpha-hi: rgba(59, 108, 181, 0.04);
+
+  /* 行内代码色（亮色用暗红，暗色要切到亮粉） */
+  --inline-code-fg: #c7254e;
+
   /* 尺寸 */
   --radius-sm: 6px;
   --radius: 10px;
@@ -31,6 +39,36 @@
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.08);
+
+  color-scheme: light;
+}
+
+/* 色彩系统 — 暗色
+   [data-theme="dark"] 由 useTheme composable 在 <html> 上写入，
+   anti-FOUC inline script 保证 SSR 到 hydration 无闪烁 */
+[data-theme="dark"] {
+  --fg: #e6e6e6;
+  --fg-soft: #b4b4b4;
+  --muted: #8a8a8a;
+  --border: #2a2a2a;
+  --border-soft: #1f1f1f;
+  --bg: #0f1115;
+  --bg-card: #161a1f;
+  --bg-code: #1a1d23;
+  --accent: #5b8def;
+  --accent-hover: #7aa2f7;
+
+  --accent-alpha-lo: rgba(91, 141, 239, 0.10);
+  --accent-alpha-mid: rgba(91, 141, 239, 0.28);
+  --accent-alpha-hi: rgba(91, 141, 239, 0.08);
+
+  --inline-code-fg: #ff7f9d;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.6);
+
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -46,6 +84,7 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 body {
@@ -66,7 +105,7 @@ a:hover { color: var(--accent-hover); }
 
 /* 选中颜色 */
 ::selection {
-  background: rgba(59, 108, 181, 0.18);
+  background: var(--accent-alpha-mid);
   color: var(--fg);
 }
 
@@ -138,7 +177,7 @@ a:hover { color: var(--accent-hover); }
   background: var(--bg-code);
   padding: 0.15em 0.45em;
   border-radius: 4px;
-  color: #c7254e;
+  color: var(--inline-code-fg);
   border: 1px solid var(--border-soft);
 }
 
@@ -223,7 +262,7 @@ a:hover { color: var(--accent-hover); }
 .prose .code-block .code-copy:hover {
   color: var(--accent);
   border-color: var(--accent);
-  background: #fff;
+  background: var(--bg-card);
 }
 .prose .code-block .code-copy svg {
   display: block;
@@ -259,7 +298,7 @@ a:hover { color: var(--accent-hover); }
   margin: 1.5rem 0;
   padding: 0.75rem 1.25rem;
   border-left: 4px solid var(--accent);
-  background: linear-gradient(90deg, rgba(59, 108, 181, 0.06) 0%, rgba(59, 108, 181, 0.02) 100%);
+  background: linear-gradient(90deg, var(--accent-alpha-lo) 0%, var(--accent-alpha-hi) 100%);
   border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
   color: var(--fg-soft);
   font-style: italic;
@@ -272,13 +311,13 @@ a:hover { color: var(--accent-hover); }
 .prose a {
   color: var(--accent);
   text-decoration: none;
-  background-image: linear-gradient(transparent 60%, rgba(59, 108, 181, 0.18) 60%);
+  background-image: linear-gradient(transparent 60%, var(--accent-alpha-mid) 60%);
   background-size: 100% 100%;
   transition: background-size 0.2s ease;
 }
 .prose a:hover {
   color: var(--accent-hover);
-  background-image: linear-gradient(transparent 0%, rgba(59, 108, 181, 0.18) 0%);
+  background-image: linear-gradient(transparent 0%, var(--accent-alpha-mid) 0%);
 }
 
 /* 图片 */
@@ -304,6 +343,11 @@ a:hover { color: var(--accent-hover); }
   z-index: 1000;
   border-radius: 0;
   cursor: zoom-out;
+}
+
+/* 暗色下图片略微降亮，避免刺眼白屏 */
+[data-theme="dark"] .prose img {
+  filter: brightness(0.92);
 }
 
 /* 分隔线 */
@@ -339,7 +383,7 @@ a:hover { color: var(--accent-hover); }
   background: var(--bg-code);
 }
 .prose tbody tr:hover {
-  background: rgba(59, 108, 181, 0.04);
+  background: var(--accent-alpha-hi);
 }
 
 /* 加粗和斜体 */

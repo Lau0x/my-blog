@@ -380,7 +380,7 @@ function isVideo(m: MediaItem): boolean {
   }
   .timeline-inner a:hover {
     color: var(--accent);
-    background: rgba(59, 108, 181, 0.06);
+    background: var(--accent-alpha-lo);
   }
   .timeline-inner .count {
     color: var(--muted);

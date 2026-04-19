@@ -136,7 +136,7 @@ function isExternal(p: string): boolean {
 }
 .search-btn:hover {
   color: var(--accent);
-  background: rgba(59, 108, 181, 0.08);
+  background: var(--accent-alpha-lo);
 }
 .nav-link {
   color: var(--fg-soft);

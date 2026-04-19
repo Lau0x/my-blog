@@ -254,7 +254,7 @@ function formatDate(ts?: string): string {
 .search-input:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(59, 108, 181, 0.12);
+  box-shadow: 0 0 0 3px var(--accent-alpha-mid);
 }
 .search-clear {
   position: absolute;
@@ -456,12 +456,10 @@ function formatDate(ts?: string): string {
 }
 
 /* 深色模式下色条和 badge 色值保持可读 */
-@media (prefers-color-scheme: dark) {
-  .card-article .card-badge {
-    background: rgba(59, 130, 246, 0.2);
-  }
-  .card-note .card-badge {
-    background: rgba(16, 185, 129, 0.2);
-  }
+[data-theme="dark"] .card-article .card-badge {
+  background: rgba(59, 130, 246, 0.2);
+}
+[data-theme="dark"] .card-note .card-badge {
+  background: rgba(16, 185, 129, 0.2);
 }
 </style>

@@ -320,7 +320,7 @@ onMounted(() => {
   }
   .toc-inner a:hover {
     color: var(--accent);
-    background: rgba(59, 108, 181, 0.06);
+    background: var(--accent-alpha-lo);
   }
 }
 </style>

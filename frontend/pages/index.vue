@@ -253,8 +253,8 @@ function tagKey(t: string | TagItem, i: number): string | number {
   transition: all 0.15s ease;
 }
 .post-link:hover .tag {
-  background: rgba(59, 108, 181, 0.06);
-  border-color: rgba(59, 108, 181, 0.2);
+  background: var(--accent-alpha-lo);
+  border-color: var(--accent-alpha-mid);
   color: var(--accent);
 }
 
