@@ -42,7 +42,7 @@ function resolve(pref: ThemePreference): ResolvedTheme {
   return pref
 }
 
-/** 把 resolvedTheme 写到 <html data-theme> 上 */
+/** 把 resolvedTheme 写到 <html data-theme> 上 + 同步更新 theme-color / hljs link */
 function applyToDom(theme: ResolvedTheme) {
   if (typeof document === 'undefined') return
   document.documentElement.setAttribute('data-theme', theme)
@@ -50,6 +50,12 @@ function applyToDom(theme: ResolvedTheme) {
   const meta = document.querySelector('meta[name="theme-color"]')
   if (meta) {
     meta.setAttribute('content', theme === 'dark' ? '#0f1115' : '#fdfcfa')
+  }
+  // 同步代码高亮 link（由 nuxt.config 的 anti-FOUC inline script 初次创建，id=hljs-theme）
+  const hljsLink = document.getElementById('hljs-theme') as HTMLLinkElement | null
+  if (hljsLink) {
+    const base = 'https://cdn.jsdelivr.net/npm/highlight.js@11.10.0/styles/'
+    hljsLink.href = base + (theme === 'dark' ? 'github-dark' : 'github') + '.min.css'
   }
 }
 

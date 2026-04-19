@@ -87,6 +87,13 @@ html, body {
   transition: background-color 0.25s ease, color 0.25s ease;
 }
 
+/* 尊重系统"减少动效"偏好：关闭主题切换过渡 */
+@media (prefers-reduced-motion: reduce) {
+  html, body {
+    transition: none;
+  }
+}
+
 body {
   font-feature-settings: 'kern', 'liga', 'palt';
 }
